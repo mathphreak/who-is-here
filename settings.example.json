@@ -1,6 +1,7 @@
 {
     "username": "user",
     "password": "pass",
+    "gh-secret": "secret",
     "devices": {
         "01:23:45:67:89:AB": "Pat Sample",
         "FE:DC:BA:98:76:54": "Alex Test"

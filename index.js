@@ -1,42 +1,43 @@
-const nightmare = require('nightmare');
-const flatten = require('lodash/flatten');
+const exec = require('child_process').exec;
+const express = require('express');
+const bodyParser = require('body-parser');
+const GithubWebHook = require('express-github-webhook');
+const getWifiClients = require('./getWifiClients');
 const settings = require('./settings.json');
 
-const names = settings.devices;
+const app = express();
+const webhookHandler = GithubWebHook({ path: '/github-webhook', secret: settings['gh-secret'] });
 
-function makeClient(x) {
-    let [name, , mac] = x;
-    if (names[mac] === undefined) {
-        name = '"' + name + '"';
-    } else {
-        name = names[mac];
-    }
-    return name;
-}
+app.set('view engine', 'hbs');
+app.use(bodyParser.json());
+app.use(webhookHandler);
 
-function getClients(on5G = false) {
-    const n = nightmare({show: false});
-    const url = 'http://192.168.100.1:8080/?wifi_wcl' + (on5G ? '1' : '');
-    return n.goto(url)
-        .wait('#ApplyButton')
-        .type('#UserName', settings.username)
-        .type('#Password', settings.password)
-        .click('#ApplyButton input')
-        .wait(1000)
-        .wait('#KeywordFilteringTable')
-        .evaluate(() => {
-            /* global $, _ */
-            return $('#KeywordFilteringTable tr.dataRow').get().map(r => _.map(r.children, c => c.innerText));
-        })
-        .end()
-        .then(x => x.filter(a => a[1].indexOf(':') === -1).map(makeClient));
-}
+app.get('/', (req, res) => {
+    getWifiClients()
+        .then(x => res.render('index', {
+            clients: x,
+            expected: getWifiClients.expected,
+            allHere: x.length === getWifiClients.expected
+        }))
+        .catch(e => res.status(500).json(e));
+});
 
-function getAllClients() {
-    return Promise.all([getClients(false), getClients(true)]);
-}
+webhookHandler.on('ping', function () {
+    console.log('Pinged from GitHub!');
+});
 
-getAllClients()
-    .then(x => flatten(x).filter(a => a !== false))
-    .then(x => x.forEach(a => console.log(a)));
+webhookHandler.on('push', function () {
+    console.error('Got GitHub push, pulling & restarting...');
+    exec('git fetch --all && git checkout --force "origin/master"', (err, stdout, stderr) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json(err);
+            return;
+        }
+        process.exit(42);
+    });
+});
 
+app.listen(3000, () => {
+    console.log('App listening on port 3000!');
+});

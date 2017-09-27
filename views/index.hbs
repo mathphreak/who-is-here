@@ -1,0 +1,13 @@
+<html>
+    <h1>{{clients.length}}/{{expected}} present</h1>
+    {{#if allHere}}
+        <h2>That's everybody!</h2>
+    {{else}}
+        <h2>Somebody's missing...</h2>
+    {{/if}}
+    <ul>
+        {{#each clients}}
+            <li>{{.}}</li>
+        {{/each}}
+    </ul>
+</html>
