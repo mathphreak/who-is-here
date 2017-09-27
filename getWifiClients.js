@@ -17,7 +17,7 @@ function makeClient(x) {
 }
 
 function getClients(on5G = false) {
-    const n = nightmare({show: false});
+    const n = nightmare({show: true});
     const url = 'http://192.168.100.1:8080/?wifi_wcl' + (on5G ? '1' : '');
     return n.goto(url)
         .wait('#ApplyButton')
