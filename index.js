@@ -28,7 +28,7 @@ webhookHandler.on('ping', function () {
 
 webhookHandler.on('push', function () {
     console.error('Got GitHub push, pulling & restarting...');
-    exec('git fetch --all && git checkout --force "origin/master"', (err, stdout, stderr) => {
+    exec('git fetch --all && git checkout --force "origin/master" && npm install', (err, stdout, stderr) => {
         if (err) {
             console.error(err);
             res.status(500).json(err);
