@@ -53,7 +53,7 @@ function getWifiClients() {
             .then(x => {
                 console.log('getWifiClients() =', x);
                 lastResults = x;
-                nextFetchTime = moment().add(10, 'minutes');
+                nextFetchTime = moment().add(5, 'minutes');
                 fetching = false;
                 return x;
             });
